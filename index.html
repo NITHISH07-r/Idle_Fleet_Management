@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Smart City Fleet Idle-Time Monitoring and Carbon Emission Analytics Platform — Real-time fleet intelligence for municipal transportation management.">
+    <title>FleetPulse — Smart City Fleet Intelligence Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- Preloader -->
+    <div id="preloader" class="preloader">
+        <div class="preloader-content">
+            <div class="preloader-logo">
+                <i class="fas fa-satellite-dish"></i>
+            </div>
+            <div class="preloader-bar"><div class="preloader-bar-fill"></div></div>
+            <p class="preloader-text">Initializing FleetPulse Systems...</p>
+        </div>
+    </div>
+
+    <!-- App Shell -->
+    <div id="app" class="app" style="opacity:0">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-icon"><i class="fas fa-satellite-dish"></i></div>
+                <div class="brand-text">
+                    <span class="brand-name">FleetPulse</span>
+                    <span class="brand-tag">Smart City v2.0</span>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav" id="sidebarNav">
+                <div class="nav-section-label">MAIN</div>
+                <a href="#" class="nav-item active" data-view="dashboard">
+                    <i class="fas fa-gauge-high"></i><span>Dashboard</span>
+                </a>
+                <a href="#" class="nav-item" data-view="fleet">
+                    <i class="fas fa-bus"></i><span>Fleet Monitor</span>
+                </a>
+                <a href="#" class="nav-item" data-view="analytics">
+                    <i class="fas fa-chart-line"></i><span>Analytics</span>
+                </a>
+
+                <div class="nav-section-label">INTELLIGENCE</div>
+                <a href="#" class="nav-item" data-view="alerts">
+                    <i class="fas fa-bell"></i><span>Alert Center</span>
+                    <span class="nav-badge" id="alertNavBadge">0</span>
+                </a>
+                <a href="#" class="nav-item" data-view="insights">
+                    <i class="fas fa-brain"></i><span>Smart Insights</span>
+                </a>
+                <a href="#" class="nav-item" data-view="reports">
+                    <i class="fas fa-file-lines"></i><span>Reports</span>
+                </a>
+
+                <div class="nav-section-label">SETTINGS</div>
+                <a href="#" class="nav-item" data-view="settings">
+                    <i class="fas fa-sliders"></i><span>Configuration</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="sim-status" id="simStatus">
+                    <span class="sim-dot live"></span>
+                    <span>Simulation Live</span>
+                </div>
+                <div class="sidebar-role">
+                    <select id="roleSelector" class="role-select">
+                        <option value="admin">Administrator</option>
+                        <option value="fleet_manager">Fleet Manager</option>
+                        <option value="supervisor">Transport Supervisor</option>
+                    </select>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Bar -->
+            <header class="topbar">
+                <button class="sidebar-toggle" id="sidebarToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="topbar-title">
+                    <h1 id="viewTitle">Dashboard</h1>
+                    <span class="topbar-subtitle" id="viewSubtitle">Real-time fleet monitoring overview</span>
+                </div>
+                <div class="topbar-actions">
+                    <div class="topbar-clock" id="topbarClock"></div>
+                    <div class="topbar-search">
+                        <i class="fas fa-search"></i>
+                        <input type="text" placeholder="Search vehicles..." id="globalSearch">
+                    </div>
+                    <button class="topbar-btn" id="notifBtn" title="Notifications">
+                        <i class="fas fa-bell"></i>
+                        <span class="notif-badge" id="notifBadge">0</span>
+                    </button>
+                    <button class="topbar-btn" id="themeToggle" title="Switch to Light Mode">
+                        <i class="fas fa-sun"></i>
+                    </button>
+                    <div class="topbar-user">
+                        <div class="user-avatar"><i class="fas fa-user-shield"></i></div>
+                        <span class="user-name" id="userName">Admin</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Notification Panel -->
+            <div class="notification-panel" id="notifPanel">
+                <div class="notif-panel-header">
+                    <h3>Notifications</h3>
+                    <button id="clearNotifsBtn" class="notif-clear-btn">Clear All</button>
+                </div>
+                <div class="notif-list" id="notifList"></div>
+            </div>
+
+            <!-- Views Container -->
+            <div class="views-container" id="viewsContainer">
+
+                <!-- ===== DASHBOARD VIEW ===== -->
+                <section class="view active" id="dashboardView">
+                    <!-- KPI Strip -->
+                    <div class="kpi-strip" id="kpiStrip">
+                        <div class="kpi-card" data-kpi="total">
+                            <div class="kpi-icon"><i class="fas fa-truck"></i></div>
+                            <div class="kpi-body">
+                                <span class="kpi-value" id="kpiTotal">0</span>
+                                <span class="kpi-label">Total Vehicles</span>
+                            </div>
+                        </div>
+                        <div class="kpi-card running" data-kpi="running">
+                            <div class="kpi-icon"><i class="fas fa-road"></i></div>
+                            <div class="kpi-body">
+                                <span class="kpi-value" id="kpiRunning">0</span>
+                                <span class="kpi-label">Running</span>
+                            </div>
+                        </div>
+                        <div class="kpi-card idle" data-kpi="idle">
+                            <div class="kpi-icon"><i class="fas fa-pause-circle"></i></div>
+                            <div class="kpi-body">
+                                <span class="kpi-value" id="kpiIdle">0</span>
+                                <span class="kpi-label">Idle</span>
+                            </div>
+                        </div>
+                        <div class="kpi-card excessive" data-kpi="excessive">
+                            <div class="kpi-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                            <div class="kpi-body">
+                                <span class="kpi-value" id="kpiExcessive">0</span>
+                                <span class="kpi-label">Excessive Idle</span>
+                            </div>
+                        </div>
+                        <div class="kpi-card fuel" data-kpi="fuel">
+                            <div class="kpi-icon"><i class="fas fa-gas-pump"></i></div>
+                            <div class="kpi-body">
+                                <span class="kpi-value" id="kpiFuel">0.0</span>
+                                <span class="kpi-label">Fuel Wasted (L)</span>
+                            </div>
+                        </div>
+                        <div class="kpi-card co2" data-kpi="co2">
+                            <div class="kpi-icon"><i class="fas fa-smog"></i></div>
+                            <div class="kpi-body">
+                                <span class="kpi-value" id="kpiCO2">0.0</span>
+                                <span class="kpi-label">CO₂ Emitted (kg)</span>
+                            </div>
+                        </div>
+                        <div class="kpi-card alerts-kpi" data-kpi="alerts">
+                            <div class="kpi-icon"><i class="fas fa-bell"></i></div>
+                            <div class="kpi-body">
+                                <span class="kpi-value" id="kpiAlerts">0</span>
+                                <span class="kpi-label">Active Alerts</span>
+                            </div>
+                        </div>
+                        <div class="kpi-card health" data-kpi="health">
+                            <div class="kpi-icon"><i class="fas fa-heart-pulse"></i></div>
+                            <div class="kpi-body">
+                                <span class="kpi-value" id="kpiHealth">100</span>
+                                <span class="kpi-label">Fleet Health %</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dashboard Charts Row 1 -->
+                    <div class="dashboard-grid">
+                        <div class="card chart-card span-2">
+                            <div class="card-header">
+                                <h3><i class="fas fa-chart-area"></i> CO₂ Emission Trends (Live)</h3>
+                                <div class="card-actions">
+                                    <select id="emissionTimeRange" class="card-select">
+                                        <option value="realtime">Real-time</option>
+                                        <option value="hourly">Hourly</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="card-body chart-container">
+                                <canvas id="emissionTrendChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="card chart-card">
+                            <div class="card-header">
+                                <h3><i class="fas fa-chart-pie"></i> Fleet Status Distribution</h3>
+                            </div>
+                            <div class="card-body chart-container">
+                                <canvas id="fleetStatusChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dashboard Charts Row 2 -->
+                    <div class="dashboard-grid">
+                        <div class="card chart-card">
+                            <div class="card-header">
+                                <h3><i class="fas fa-ranking-star"></i> Top Idle Offenders</h3>
+                            </div>
+                            <div class="card-body chart-container">
+                                <canvas id="idleRankChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="card chart-card">
+                            <div class="card-header">
+                                <h3><i class="fas fa-fire-flame-curved"></i> Fuel Consumption Analysis</h3>
+                            </div>
+                            <div class="card-body chart-container">
+                                <canvas id="fuelAnalysisChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="card chart-card">
+                            <div class="card-header">
+                                <h3><i class="fas fa-calendar-day"></i> Daily Idle Events</h3>
+                            </div>
+                            <div class="card-body chart-container">
+                                <canvas id="dailyIdleChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Live Alert Feed + Live Telemetry -->
+                    <div class="dashboard-grid">
+                        <div class="card span-2">
+                            <div class="card-header">
+                                <h3><i class="fas fa-satellite-dish"></i> Live Telemetry Feed</h3>
+                                <div class="card-actions">
+                                    <span class="live-indicator"><span class="live-dot"></span> LIVE</span>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="telemetry-table-wrap">
+                                    <table class="data-table" id="liveTelemetryTable">
+                                        <thead>
+                                            <tr>
+                                                <th>Vehicle</th>
+                                                <th>Type</th>
+                                                <th>Status</th>
+                                                <th>Speed</th>
+                                                <th>RPM</th>
+                                                <th>Fuel Rate</th>
+                                                <th>Idle Time</th>
+                                                <th>CO₂</th>
+                                                <th>Driver Score</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="liveTelemetryBody"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header">
+                                <h3><i class="fas fa-bolt"></i> Recent Alerts</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="alert-feed" id="dashAlertFeed"></div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ===== FLEET MONITOR VIEW ===== -->
+                <section class="view" id="fleetView">
+                    <div class="fleet-toolbar">
+                        <div class="fleet-filters">
+                            <select id="fleetTypeFilter" class="filter-select">
+                                <option value="all">All Types</option>
+                                <option value="bus">Buses</option>
+                                <option value="garbage_truck">Garbage Trucks</option>
+                                <option value="water_tanker">Water Tankers</option>
+                                <option value="service_vehicle">Service Vehicles</option>
+                            </select>
+                            <select id="fleetStatusFilter" class="filter-select">
+                                <option value="all">All Statuses</option>
+                                <option value="running">Running</option>
+                                <option value="idle">Idle</option>
+                                <option value="excessive_idle">Excessive Idle</option>
+                                <option value="stopped">Stopped</option>
+                            </select>
+                        </div>
+                        <div class="fleet-view-toggle">
+                            <button class="view-toggle-btn active" data-fleet-view="table"><i class="fas fa-table"></i></button>
+                            <button class="view-toggle-btn" data-fleet-view="grid"><i class="fas fa-grip"></i></button>
+                        </div>
+                    </div>
+                    <div class="fleet-content" id="fleetContent">
+                        <!-- Fleet table/grid rendered by JS -->
+                    </div>
+                </section>
+
+                <!-- ===== ANALYTICS VIEW ===== -->
+                <section class="view" id="analyticsView">
+                    <div class="analytics-grid">
+                        <div class="card chart-card span-2">
+                            <div class="card-header">
+                                <h3><i class="fas fa-chart-bar"></i> Vehicle-wise Idle Time Ranking</h3>
+                            </div>
+                            <div class="card-body chart-container chart-tall">
+                                <canvas id="vehicleIdleRankingChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="card chart-card">
+                            <div class="card-header">
+                                <h3><i class="fas fa-chart-line"></i> Emission by Vehicle Type</h3>
+                            </div>
+                            <div class="card-body chart-container chart-tall">
+                                <canvas id="emissionByTypeChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="card chart-card">
+                            <div class="card-header">
+                                <h3><i class="fas fa-chart-area"></i> Cumulative Emissions</h3>
+                            </div>
+                            <div class="card-body chart-container chart-tall">
+                                <canvas id="cumulativeEmissionChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="card chart-card">
+                            <div class="card-header">
+                                <h3><i class="fas fa-user-check"></i> Driver Efficiency Scores</h3>
+                            </div>
+                            <div class="card-body chart-container chart-tall">
+                                <canvas id="driverScoreChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="card chart-card">
+                            <div class="card-header">
+                                <h3><i class="fas fa-car-burst"></i> Vehicle Performance Scores</h3>
+                            </div>
+                            <div class="card-body chart-container chart-tall">
+                                <canvas id="vehiclePerfChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Idle Hotspot Section -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-map-location-dot"></i> Idle Hotspot Analysis</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="hotspot-grid" id="hotspotGrid"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ===== ALERTS VIEW ===== -->
+                <section class="view" id="alertsView">
+                    <div class="alerts-toolbar">
+                        <div class="alert-stats" id="alertStats"></div>
+                        <div class="alert-filters">
+                            <select id="alertSeverityFilter" class="filter-select">
+                                <option value="all">All Severities</option>
+                                <option value="critical">Critical</option>
+                                <option value="warning">Warning</option>
+                                <option value="info">Info</option>
+                            </select>
+                            <select id="alertTypeFilter" class="filter-select">
+                                <option value="all">All Types</option>
+                                <option value="excessive_idle">Excessive Idling</option>
+                                <option value="emission_spike">Emission Spike</option>
+                                <option value="repeated_idle">Repeated Pattern</option>
+                                <option value="abnormal">Abnormal Behavior</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="alerts-list" id="alertsList"></div>
+                </section>
+
+                <!-- ===== INSIGHTS VIEW ===== -->
+                <section class="view" id="insightsView">
+                    <div class="insights-grid">
+                        <div class="card insight-card">
+                            <div class="card-header">
+                                <h3><i class="fas fa-lightbulb"></i> Recommendations</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="recommendations-list" id="recommendationsList"></div>
+                            </div>
+                        </div>
+                        <div class="card insight-card">
+                            <div class="card-header">
+                                <h3><i class="fas fa-crystal-ball"></i> Predictive Insights</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="predictions-list" id="predictionsList"></div>
+                            </div>
+                        </div>
+                        <div class="card insight-card span-full">
+                            <div class="card-header">
+                                <h3><i class="fas fa-trophy"></i> Driver & Vehicle Leaderboard</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="leaderboard-grid" id="leaderboardGrid"></div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ===== REPORTS VIEW ===== -->
+                <section class="view" id="reportsView">
+                    <div class="reports-toolbar">
+                        <div class="report-period-selector">
+                            <button class="period-btn active" data-period="daily">Daily</button>
+                            <button class="period-btn" data-period="weekly">Weekly</button>
+                            <button class="period-btn" data-period="monthly">Monthly</button>
+                        </div>
+                        <button class="btn-primary" id="exportReportBtn">
+                            <i class="fas fa-download"></i> Export Report
+                        </button>
+                    </div>
+                    <div class="report-content" id="reportContent"></div>
+                </section>
+
+                <!-- ===== SETTINGS VIEW ===== -->
+                <section class="view" id="settingsView">
+                    <div class="settings-grid">
+                        <div class="card settings-card">
+                            <div class="card-header"><h3><i class="fas fa-sliders"></i> Idle Detection Settings</h3></div>
+                            <div class="card-body">
+                                <div class="setting-row">
+                                    <label>Excessive Idle Threshold (minutes)</label>
+                                    <input type="number" id="idleThreshold" value="10" min="1" max="60" class="setting-input">
+                                </div>
+                                <div class="setting-row">
+                                    <label>Idle RPM Threshold</label>
+                                    <input type="number" id="rpmThreshold" value="700" min="400" max="1200" class="setting-input">
+                                </div>
+                                <div class="setting-row">
+                                    <label>Telemetry Update Interval (seconds)</label>
+                                    <input type="number" id="updateInterval" value="5" min="1" max="30" class="setting-input">
+                                </div>
+                                <div class="setting-row">
+                                    <label>Number of Simulated Vehicles</label>
+                                    <input type="number" id="vehicleCount" value="75" min="10" max="200" class="setting-input">
+                                </div>
+                                <button class="btn-primary" id="applySettingsBtn">
+                                    <i class="fas fa-check"></i> Apply Settings
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card settings-card">
+                            <div class="card-header"><h3><i class="fas fa-info-circle"></i> System Information</h3></div>
+                            <div class="card-body">
+                                <div class="sys-info-grid" id="sysInfoGrid">
+                                    <div class="sys-info-item"><span class="sys-label">Platform</span><span class="sys-value">FleetPulse v2.0</span></div>
+                                    <div class="sys-info-item"><span class="sys-label">Mode</span><span class="sys-value">Simulation (OBD-II)</span></div>
+                                    <div class="sys-info-item"><span class="sys-label">Data Source</span><span class="sys-value">Simulated Telemetry</span></div>
+                                    <div class="sys-info-item"><span class="sys-label">Architecture</span><span class="sys-value">IoT-Ready (ESP32/RPi)</span></div>
+                                    <div class="sys-info-item"><span class="sys-label">Cloud Backend</span><span class="sys-value">Ready for Integration</span></div>
+                                    <div class="sys-info-item"><span class="sys-label">GPS Module</span><span class="sys-value">Simulated Coords</span></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card settings-card">
+                            <div class="card-header"><h3><i class="fas fa-palette"></i> Emission Factors</h3></div>
+                            <div class="card-body">
+                                <div class="setting-row">
+                                    <label>CO₂ per Liter Diesel (kg)</label>
+                                    <input type="number" id="co2Factor" value="2.68" step="0.01" class="setting-input">
+                                </div>
+                                <div class="setting-row">
+                                    <label>Bus Idle Fuel Rate (L/hr)</label>
+                                    <input type="number" id="busFuelRate" value="3.5" step="0.1" class="setting-input">
+                                </div>
+                                <div class="setting-row">
+                                    <label>Truck Idle Fuel Rate (L/hr)</label>
+                                    <input type="number" id="truckFuelRate" value="2.8" step="0.1" class="setting-input">
+                                </div>
+                                <div class="setting-row">
+                                    <label>Service Vehicle Idle Fuel Rate (L/hr)</label>
+                                    <input type="number" id="svcFuelRate" value="1.5" step="0.1" class="setting-input">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Vehicle Detail Modal -->
+    <div class="modal-overlay" id="vehicleModalOverlay">
+        <div class="modal" id="vehicleModal">
+            <div class="modal-header">
+                <h3 id="modalVehicleTitle">Vehicle Details</h3>
+                <button class="modal-close" id="modalClose"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body" id="modalBody"></div>
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/simulation.js"></script>
+    <script src="js/engines.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script src="js/reports.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
